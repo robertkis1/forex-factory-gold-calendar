@@ -87,7 +87,7 @@ def refresh(raw):
                 old = previous.get(uid)
                 if old:
                     def without_stamp(text):
-                        return re.sub(r"^DTSTAMP:.*\\r?\\n", "", text, flags=re.M).strip()
+                        return re.sub(r"^DTSTAMP:.*\r?\n", "", text, flags=re.M).strip()
                     if without_stamp(old[1]) == without_stamp(rendered):
                         rendered = old[1]
                 previous[uid] = (when, rendered)
