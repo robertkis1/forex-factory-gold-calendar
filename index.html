@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>XAUUSD Calendar • Live Health Monitor</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#0b1220;color:#e8f0fb}*{box-sizing:border-box}body{margin:0;padding:24px;max-width:1050px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}h1{font-size:clamp(24px,4vw,38px);margin:8px 0}p,.muted{color:#a4b5cc}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin:26px 0}.card{background:#17253b;border:1px solid #2d405a;border-radius:16px;padding:20px}.label{color:#9cb0c9;font-size:13px}.value{font-size:27px;font-weight:700;margin-top:9px;overflow-wrap:anywhere}.ok{color:#6fe5a0}.bad{color:#ff9c9c}.warn{color:#ffd27c}button,a.action{background:#397cdd;color:white;padding:10px 16px;border-radius:9px;border:0;text-decoration:none;cursor:pointer;display:inline-block}a{color:#9bc6ff}section{background:#17253b;border:1px solid #2d405a;border-radius:16px;padding:20px;margin-bottom:16px}li{margin:12px 0}code{overflow-wrap:anywhere}footer{font-size:13px;color:#a4b5cc;margin:24px 0}
+</style></head><body>
+<header><div><div class="muted">FOREX FACTORY • USD HIGH + MEDIUM</div><h1>Calendar health monitor</h1></div><button id="refresh">Check now</button></header>
+<p>Live checks against GitHub Actions and the published Apple Calendar feed. Automatically rechecks every 5 minutes while this page is open.</p>
+<main>
+<div class="card"><div class="label">Automation health</div><div class="value" id="health">Checking…</div><div class="muted" id="healthDetail"></div></div>
+<div class="card"><div class="label">Latest workflow run</div><div class="value" id="run">Checking…</div><div class="muted" id="runDetail"></div></div>
+<div class="card"><div class="label">Published calendar</div><div class="value" id="feed">Checking…</div><div class="muted" id="feedDetail"></div></div>
+<div class="card"><div class="label">Upcoming USD events</div><div class="value" id="upcoming">Checking…</div><div class="muted" id="upcomingDetail"></div></div>
+</main>
+<section><h2>How the system works</h2><ol><li><strong>GitHub Actions:</strong> scheduled hourly at minute 17 UTC (GitHub can delay or skip runs).</li><li><strong>Python updater:</strong> downloads Forex Factory's current-week ICS, filters US high/medium events and writes the calendar file.</li><li><strong>GitHub Pages:</strong> republishes the ICS when a commit changes it.</li><li><strong>Apple Calendar:</strong> checks the subscribed feed on your device's 15-minute setting.</li><li><strong>This monitor:</strong> checks actual GitHub workflow results and the publicly published ICS, not merely the schedule.</li></ol></section>
+<section><h2>Latest checks</h2><div id="details" class="muted">Loading…</div><p><a href="https://github.com/robertkis1/forex-factory-gold-calendar/actions/workflows/calendar.yml" target="_blank" rel="noopener">View workflow logs</a> · <a href="xauusd_news.ics">Open calendar feed</a> · <a href="https://github.com/robertkis1/forex-factory-gold-calendar" target="_blank" rel="noopener">Repository</a></p></section>
+<footer>Important: Green means the automation and feed appear healthy; it does not guarantee Forex Factory's data is complete or that Apple Calendar has displayed notifications. No events in the upcoming week may indicate that the source has not advanced yet.</footer>
+<script>
+const repo='robertkis1/forex-factory-gold-calendar';
+const $=id=>document.getElementById(id);
+const set=(id,value,cls='')=>{$(id).textContent=value;$(id).className=id.endsWith('Detail')?'muted':'value '+cls};
+const ago=date=>{const m=Math.max(0,Math.round((Date.now()-new Date(date))/60000));return m<60?m+' min ago':(m/60).toFixed(1)+' hours ago'};
+async function check(){
+$('refresh').disabled=true;$('details').textContent='Checking GitHub and published calendar…';
+let run=null,feedOk=false,upcoming=0,total=0,latest=null,errors=[];
+try{
+ const res=await fetch('https://api.github.com/repos/'+repo+'/actions/workflows/calendar.yml/runs?per_page=5',{cache:'no-store'});
+ if(!res.ok)throw Error('GitHub API HTTP '+res.status);
+ const data=await res.json();run=data.workflow_runs?.[0];
+ if(!run)throw Error('No workflow runs found');
+ set('run',run.status==='completed'?(run.conclusion==='success'?'Success':run.conclusion||'Unknown'):'Running',run.conclusion==='success'?'ok':run.status==='completed'?'bad':'warn');
+ set('runDetail',ago(run.created_at)+' · '+new Date(run.created_at).toLocaleString());
+}catch(e){errors.push('Workflow check: '+e.message);set('run','Unavailable','bad');set('runDetail','Could not retrieve workflow history')}
+try{
+ const res=await fetch('xauusd_news.ics?t='+Date.now(),{cache:'no-store'});
+ if(!res.ok)throw Error('Calendar HTTP '+res.status);
+ const body=await res.text();if(!body.includes('BEGIN:VCALENDAR')||!body.includes('END:VCALENDAR'))throw Error('Not a valid ICS document');
+ feedOk=true;const dates=[...body.matchAll(/^DTSTART:(\d{8}T\d{6}Z)/gm)].map(m=>m[1]);total=dates.length;
+ const now=new Date();upcoming=dates.filter(d=>{const iso=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)+'T'+d.slice(9,11)+':'+d.slice(11,13)+':'+d.slice(13,15)+'Z';return new Date(iso)>=now}).length;
+ latest=dates.length?dates[dates.length-1]:null;
+ set('feed','Accessible','ok');set('feedDetail',total+' events published');
+ set('upcoming',String(upcoming),upcoming?'ok':'warn');set('upcomingDetail','Future events in published ICS');
+}catch(e){errors.push('Feed check: '+e.message);set('feed','Unavailable','bad');set('feedDetail','Public ICS could not be read');set('upcoming','Unknown','warn');set('upcomingDetail','Cannot count events')}
+const age=run?(Date.now()-new Date(run.created_at))/3600000:Infinity;
+let state,detail,cls;
+if(!run||!feedOk){state='Check failed';detail='One or more sources could not be verified';cls='bad'}
+else if(run.status==='completed'&&run.conclusion!=='success'){state='Workflow failed';detail='Review the latest GitHub Actions logs';cls='bad'}
+else if(age>3){state='Overdue';detail='No workflow run in over 3 hours';cls='bad'}
+else if(run.status!=='completed'){state='Updating';detail='Latest workflow is still running';cls='warn'}
+else {state='Operational';detail=upcoming?'Upcoming events are published':'No future events published yet';cls=upcoming?'ok':'warn'}
+set('health',state,cls);set('healthDetail',detail);
+$('details').textContent='Checked: '+new Date().toLocaleString()+' · Last workflow: '+(run?new Date(run.created_at).toLocaleString():'unknown')+' · Published events: '+total+' · Upcoming: '+upcoming+(errors.length?' · '+errors.join(' | '):'');
+$('refresh').disabled=false;
+}
+$('refresh').addEventListener('click',check);check();setInterval(check,300000);
+</script></body></html>
