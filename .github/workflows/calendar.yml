@@ -1,7 +1,7 @@
 name: Update Forex Calendar
 on:
   schedule:
-    - cron: '20 6 * * *'
+    - cron: '17 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
