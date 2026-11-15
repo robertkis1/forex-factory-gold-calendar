@@ -1,0 +1,103 @@
+name: Calendar Health Watchdog
+
+on:
+  schedule:
+    - cron: '43 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check update workflow and public calendar
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const problems = [];
+            const {data} = await github.rest.actions.listWorkflowRuns({
+              owner, repo, workflow_id: 'calendar.yml', per_page: 10
+            });
+            const runs = data.workflow_runs || [];
+            const latest = runs[0];
+            const now = Date.now();
+            if (!latest) {
+              problems.push('No calendar updater runs were found.');
+            } else {
+              const ageHours = (now - Date.parse(latest.created_at)) / 3600000;
+              if (ageHours > 3) {
+                problems.push('Latest updater run is ' + ageHours.toFixed(1) + ' hours old (threshold: 3 hours).');
+              }
+              if (latest.status === 'completed' && latest.conclusion !== 'success') {
+                problems.push('Latest updater finished with: ' + latest.conclusion + '.');
+              }
+            }
+
+            const feedUrl = 'https://' + owner + '.github.io/' + repo + '/xauusd_news.ics';
+            let feedEvents = 0;
+            let upcomingEvents = 0;
+            try {
+              const response = await fetch(feedUrl + '?health=' + now, {
+                headers: {'User-Agent': 'calendar-health-watchdog'}
+              });
+              if (!response.ok) throw new Error('HTTP ' + response.status);
+              const ics = await response.text();
+              if (!ics.includes('BEGIN:VCALENDAR') || !ics.includes('END:VCALENDAR')) {
+                throw new Error('Response is not a valid VCALENDAR');
+              }
+              const dates = [...ics.matchAll(/^DTSTART:(\d{8}T\d{6}Z)/gm)];
+              feedEvents = dates.length;
+              upcomingEvents = dates.filter(x => {
+                const d = x[1];
+                const iso = d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)+'T'+d.slice(9,11)+':'+d.slice(11,13)+':'+d.slice(13,15)+'Z';
+                return Date.parse(iso) >= now;
+              }).length;
+            } catch (error) {
+              problems.push('Public ICS could not be verified: ' + error.message);
+            }
+            core.info('Published events: ' + feedEvents + ', upcoming events: ' + upcomingEvents);
+            // Zero upcoming events is not automatically a failure: the weekly source may not have advanced.
+            const title = '[Calendar Monitor] Automation or feed problem';
+            const {data: issues} = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', per_page: 100
+            });
+            const existing = issues.find(i => !i.pull_request && i.title === title);
+            if (problems.length) {
+              const body = [
+                'Automated check detected a problem at ' + new Date().toISOString() + '.',
+                '',
+                ...problems.map(p => '- ' + p),
+                '',
+                'Latest updater: ' + (latest ? latest.html_url : 'No runs'),
+                'Calendar feed: ' + feedUrl,
+                'Workflow logs: https://github.com/' + owner + '/' + repo + '/actions/workflows/calendar.yml',
+                '',
+                'This issue is automatically closed when the watchdog verifies recovery.'
+              ].join('\n');
+              if (existing) {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: existing.number, body
+                });
+              } else {
+                await github.rest.issues.create({owner, repo, title, body});
+              }
+              core.setFailed(problems.join(' | '));
+            } else {
+              if (existing) {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: existing.number,
+                  body: 'Recovery confirmed at ' + new Date().toISOString() +
+                    '. Latest updater and published ICS passed checks.'
+                });
+                await github.rest.issues.update({
+                  owner, repo, issue_number: existing.number, state: 'closed'
+                });
+              }
+              core.info('Health checks passed at ' + new Date().toISOString());
+            }
