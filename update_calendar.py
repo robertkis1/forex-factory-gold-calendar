@@ -83,6 +83,13 @@ def refresh(raw):
             converted = convert(block)
             if converted:
                 uid, when, rendered = converted
+                # Keep previous event if only the generated DTSTAMP differs.
+                old = previous.get(uid)
+                if old:
+                    def without_stamp(text):
+                        return re.sub(r"^DTSTAMP:.*\\r?\\n", "", text, flags=re.M).strip()
+                    if without_stamp(old[1]) == without_stamp(rendered):
+                        rendered = old[1]
                 previous[uid] = (when, rendered)
     now = datetime.now(timezone.utc)
     kept = sorted(
@@ -95,7 +102,7 @@ def refresh(raw):
         "PRODID:-//XAUUSD Forex Factory Calendar//EN", "CALSCALE:GREGORIAN",
         "X-WR-CALNAME:XAUUSD Forex Factory High + Medium",
         "X-WR-TIMEZONE:Europe/London",
-        "REFRESH-INTERVAL;VALUE=DURATION:P1D", "X-PUBLISHED-TTL:PT24H"
+        "REFRESH-INTERVAL;VALUE=DURATION:PT1H", "X-PUBLISHED-TTL:PT1H"
     ]
     OUTPUT.write_text("\r\n".join(header + [block for _, block in kept] + ["END:VCALENDAR", ""]), encoding="utf-8")
     print(f"Calendar updated: {len(kept)} events")
