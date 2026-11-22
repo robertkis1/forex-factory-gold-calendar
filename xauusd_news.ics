@@ -146,4 +146,102 @@ DESCRIPTION:Forex news in 30 minutes
 TRIGGER:-PT30M
 END:VALARM
 END:VEVENT
+BEGIN:VEVENT
+UID:ff-149772@xauusd-calendar
+DTSTAMP:20261122T065617Z
+DTSTART:20261123T144500Z
+DTEND:20261123T145000Z
+SUMMARY:🟠 [MEDIUM] US Flash Manufacturing PMI
+DESCRIPTION:Impact: MEDIUM\nCurrency: USD\nSource: https://www.forexfactory.com/calendar/552-us-flash-manufacturing-pmi\nVerify times before trading.
+URL:https://www.forexfactory.com/calendar/552-us-flash-manufacturing-pmi
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Forex news in 30 minutes
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:ff-149784@xauusd-calendar
+DTSTAMP:20261122T065617Z
+DTSTART:20261123T144500Z
+DTEND:20261123T145000Z
+SUMMARY:🟠 [MEDIUM] US Flash Services PMI
+DESCRIPTION:Impact: MEDIUM\nCurrency: USD\nSource: https://www.forexfactory.com/calendar/583-us-flash-services-pmi\nVerify times before trading.
+URL:https://www.forexfactory.com/calendar/583-us-flash-services-pmi
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Forex news in 30 minutes
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:ff-146888@xauusd-calendar
+DTSTAMP:20261122T065617Z
+DTSTART:20261124T150000Z
+DTEND:20261124T150500Z
+SUMMARY:🟠 [MEDIUM] US CB Consumer Confidence
+DESCRIPTION:Impact: MEDIUM\nCurrency: USD\nSource: https://www.forexfactory.com/calendar/208-us-cb-consumer-confidence\nVerify times before trading.
+URL:https://www.forexfactory.com/calendar/208-us-cb-consumer-confidence
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Forex news in 30 minutes
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:ff-148237@xauusd-calendar
+DTSTAMP:20261122T065617Z
+DTSTART:20261125T133000Z
+DTEND:20261125T133500Z
+SUMMARY:🔴 [HIGH] US Core PCE Price Index m/m
+DESCRIPTION:Impact: HIGH\nCurrency: USD\nSource: https://www.forexfactory.com/calendar/85-us-core-pce-price-index-mm\nVerify times before trading.
+URL:https://www.forexfactory.com/calendar/85-us-core-pce-price-index-mm
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Forex news in 30 minutes
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:ff-148292@xauusd-calendar
+DTSTAMP:20261122T065617Z
+DTSTART:20261125T133000Z
+DTEND:20261125T133500Z
+SUMMARY:🔴 [HIGH] US Prelim GDP q/q
+DESCRIPTION:Impact: HIGH\nCurrency: USD\nSource: https://www.forexfactory.com/calendar/27-us-prelim-gdp-qq\nVerify times before trading.
+URL:https://www.forexfactory.com/calendar/27-us-prelim-gdp-qq
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Forex news in 30 minutes
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:ff-148300@xauusd-calendar
+DTSTAMP:20261122T065617Z
+DTSTART:20261125T133000Z
+DTEND:20261125T133500Z
+SUMMARY:🟠 [MEDIUM] US Prelim GDP Price Index q/q
+DESCRIPTION:Impact: MEDIUM\nCurrency: USD\nSource: https://www.forexfactory.com/calendar/45-us-prelim-gdp-price-index-qq\nVerify times before trading.
+URL:https://www.forexfactory.com/calendar/45-us-prelim-gdp-price-index-qq
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Forex news in 30 minutes
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:ff-147025@xauusd-calendar
+DTSTAMP:20261122T065617Z
+DTSTART:20261125T133000Z
+DTEND:20261125T133500Z
+SUMMARY:🟠 [MEDIUM] US Unemployment Claims
+DESCRIPTION:Impact: MEDIUM\nCurrency: USD\nSource: https://www.forexfactory.com/calendar/11-us-unemployment-claims\nVerify times before trading.
+URL:https://www.forexfactory.com/calendar/11-us-unemployment-claims
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Forex news in 30 minutes
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
 END:VCALENDAR
